@@ -1,0 +1,15 @@
+/home/reini/projects/Nikolo/Nikolo.Data/bin/Debug/net8.0/Nikolo.Data.deps.json
+/home/reini/projects/Nikolo/Nikolo.Data/bin/Debug/net8.0/Nikolo.Data.runtimeconfig.json
+/home/reini/projects/Nikolo/Nikolo.Data/bin/Debug/net8.0/Nikolo.Data.dll
+/home/reini/projects/Nikolo/Nikolo.Data/bin/Debug/net8.0/Nikolo.Data.pdb
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.csproj.AssemblyReference.cache
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.GeneratedMSBuildEditorConfig.editorconfig
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.AssemblyInfoInputs.cache
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.AssemblyInfo.cs
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.csproj.CoreCompileInputs.cache
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.dll
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/refint/Nikolo.Data.dll
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.pdb
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/Nikolo.Data.genruntimeconfig.cache
+/home/reini/projects/Nikolo/Nikolo.Data/obj/Debug/net8.0/ref/Nikolo.Data.dll
+/home/reini/projects/Nikolo/Nikolo.Data/bin/Debug/net8.0/appsettings.json
