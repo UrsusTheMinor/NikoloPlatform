@@ -1,4 +1,4 @@
-namespace Nikolo.Api.DTOs;
+namespace Nikolo.Data.DTOs;
 
 public class UserUpsertDto
 {

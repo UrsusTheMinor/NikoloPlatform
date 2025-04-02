@@ -9,6 +9,7 @@
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.Logic.AssemblyInfoInputs.cache
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.Logic.AssemblyInfo.cs
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.Logic.csproj.CoreCompileInputs.cache
+/home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.Logic.sourcelink.json
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.L.1A6D9791.Up2Date
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/Nikolo.Logic.dll
 /home/reini/projects/Nikolo/Nikolo.Logic/obj/Debug/net8.0/refint/Nikolo.Logic.dll

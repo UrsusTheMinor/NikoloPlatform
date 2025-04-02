@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Nikolo.Api</name>
+    </assembly>
+    <members>
+        <member name="T:Nikolo.Api.Controllers.UsersController">
+            <summary>
+            Handles user related actions
+            </summary>
+            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserRepository"/></dependency>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.#ctor(Nikolo.Logic.Contracts.IUserRepository,Nikolo.Logic.Contracts.IUserTimeService)">
+            <summary>
+            Handles user related actions
+            </summary>
+            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserRepository"/></dependency>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.SaveUser">
+            <summary>
+            Saves a user from the JWT claim if they do not already exist in the system.
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token 
+            and attempts to store it in the database. If the user already exists, no action is taken.
+            </remarks>
+            <returns>
+            A response indicating whether the user was successfully saved.
+            </returns>
+            <response code="201">User successfully added.</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.SignUpForSkill(Nikolo.Data.DTOs.SignUpForSkillDto)">
+            <summary>
+            Signs the logged-in user up for a skill.
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to register a skill to this user
+            </remarks>
+            <returns>
+            A response indicating whether the user was successfully saved.
+            </returns>
+            <response code="201">User was not enlisted in the database and was added alongside with assigning a skill to it.</response>
+            <response code="200">User was successfully signed up for skill.</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.GetSkills">
+            <summary>
+            Gets the skills of the logged-in user.
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to get all skill of this user
+            </remarks>
+            <returns>
+            A List of <see cref="T:Nikolo.Data.DTOs.Skill.SkillDto"/> which the user has registered to him.
+            </returns>
+            <response code="201">User was not enlisted in the database and was added
+            alongside with getting his registered skill to it.</response>
+            <response code="200">Successfully returned a List of <see cref="T:Nikolo.Data.DTOs.Skill.SkillDto"/> containing the users registered skills.</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.RemoveSkill(System.Int32)">
+            <summary>
+            Removes a skill of the logged-in user.
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to remove a skill from an user.
+            </remarks>
+            <returns>
+            A response indicating whether the user was successfully saved or the delete quietly passed.
+            </returns>
+            <response code="201">User was not enlisted in the database and was added</response>
+            <response code="200">Successfully removed a skill.</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.AddAvailableTime(Nikolo.Data.DTOs.User.AvailableTimeCreateDto)">
+            <summary>
+            Adds a Time to an user
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to add a skill to an user, if no user is yet created it will be created
+            along the way
+            </remarks>
+            <returns>
+            A Response which includes the used User, and the created Time, if not null
+            </returns>
+            <response code="201">Time was successfully added, can be possible that user was created</response>
+            <response code="400">Wrong arguments were used, probably was the starttime after the endtime
+            or startime overlaps two other times</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.EditAvailableTime(Nikolo.Data.DTOs.User.AvailableTimeEditDto)">
+            <summary>
+            Edits a time of an user
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to edit a time of an user, using the <see cref="T:Nikolo.Data.DTOs.User.AvailableTimeEditDto"/> from the body, if no user is yet created it will be created
+            along the way
+            </remarks>
+            <returns>
+            A response indicating whether the user was successfully saved or the edit quietly passed
+            </returns>
+            <response code="201">User was not yet created, but was along the execution</response>
+            <response code="400">Time was not yet created </response>
+            <response code="200">Time was successfully edited</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="T:Nikolo.Api.Responses.User.UserCreatedResponse">
+            <summary>
+            Response model for a successfully created user.
+            </summary>
+        </member>
+    </members>
+</doc>

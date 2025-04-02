@@ -1,4 +1,3 @@
-using System.Security.Principal;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Nikolo.Data.Models;
@@ -24,18 +23,6 @@ public class ApplicationDbContext : DbContext
         : base(options)
     {
     }
-    
-    //TODO: add repositories to take applicationdbcontext of asp net
-    
-    // protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-    // {
-    //     var configuration = new ConfigurationBuilder()
-    //         .AddJsonFile("appsettings.json")
-    //         .Build();
-    //
-    //     var connectionString = configuration.GetConnectionString("DefaultConnection");
-    //     optionsBuilder.UseSqlServer(connectionString);
-    // }
     
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
