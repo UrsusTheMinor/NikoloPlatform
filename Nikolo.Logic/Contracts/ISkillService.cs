@@ -1,3 +1,4 @@
+using Nikolo.Data.DTOs.Skill;
 using Nikolo.Data.Models;
 
 namespace Nikolo.Logic.Contracts;
@@ -11,15 +12,15 @@ public interface ISkillService
     /// <summary>
     /// Adds a new skill to the database.
     /// </summary>
-    /// <param name="skillname">The name of the skill to be added.</param>
+    /// <param name="skillDto">SkillDto which includes information on how a Skill should be created.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task AddSkill(string skillname);
+    Task CreateSkill(CreateSkillDto skillDto);
     
     /// <summary>
     /// Retrieves a list of all skills from the database.
     /// </summary>
     /// <returns>A task that resolves to a list of <see cref="Skill"/> objects.</returns>
-    Task<List<Skill>> GetSkills();
+    Task<List<Skill>> GetAllSkills();
 
     /// <summary>
     /// Retrieves a skill by its unique identifier.

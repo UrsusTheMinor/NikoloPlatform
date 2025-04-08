@@ -6,10 +6,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Nikolo.Api.Authorization;
+using Nikolo.Api.AutoMapperProfiles;
 using Nikolo.Api.Helper;
 using Nikolo.Data;
 using Nikolo.Logic.Contracts;
 using Nikolo.Logic.Services;
+using Scalar.AspNetCore;
 using Serilog;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
@@ -30,10 +32,16 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+
+var scopes = builder.Configuration.GetSection("Scopes").Get<string[]>();
+
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("read:messages", policy => policy.Requirements.Add(new 
-        HasScopeRequirement("read:messages", domain)));
+    foreach (var scope in scopes ?? Array.Empty<string>())
+    {
+        options.AddPolicy(scope, policy =>
+            policy.Requirements.Add(new HasScopeRequirement(scope, domain)));
+    }
 });
 
 
@@ -58,13 +66,14 @@ builder.Host.UseSerilog((hostingContext, loggerConfiguration) =>
 
 
 builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
-builder.Services.AddScoped<IUserRepository, UserService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IUserTimeService, UserTimeService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-	
+
+builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
@@ -82,6 +91,8 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));  
 });
 
+builder.Services.AddAutoMapper(typeof(AvailableTimeMappingProfile), typeof(SkillMappingProfile));
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -89,8 +100,14 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger(c =>
     {
         c.OpenApiVersion = Microsoft.OpenApi.OpenApiSpecVersion.OpenApi3_0;
+        c.RouteTemplate = "/openapi/{documentName}.json";
+
     });
-    app.UseSwaggerUI();
+    app.MapScalarApiReference();
+    // app.UseSwaggerUI(options =>
+    // {
+    //     options.SwaggerEndpoint("/openapi/v1.json", "Nikolo API");
+    // });
     app.UseDeveloperExceptionPage();
 }
 app.UseCors("AllowAngular");

@@ -6,7 +6,7 @@ using Nikolo.Logic.Contracts;
 
 namespace Nikolo.Logic.Services;
 
-public class UserService(ApplicationDbContext context, ILogger<UserService> logger, ISkillService skillService) : IUserRepository
+public class UserService(ApplicationDbContext context, ILogger<UserService> logger, ISkillService skillService) : IUserService
 {
     private readonly ILogger <UserService> logger = logger;
     
@@ -61,7 +61,7 @@ public class UserService(ApplicationDbContext context, ILogger<UserService> logg
         }
     }
 
-    public async Task<bool> AddSkill(Employee user, int skillId)
+    public async Task<bool> AddSkillToUser(Employee user, int skillId)
     {
         var skill = await skillService.GetSkill(skillId);
 
@@ -96,12 +96,12 @@ public class UserService(ApplicationDbContext context, ILogger<UserService> logg
         return true;
     }
 
-    public async Task<List<Skill>> GetSkills(Employee user)
+    public async Task<List<Skill>> GetSkillsFromUser(Employee user)
     {
         return await context.SkillEmployees.Where(se => se.EmployeeId == user.Id).Select(se => se.Skill).ToListAsync();
     }
 
-    public async Task RemoveSkill(Employee user, int skillId)
+    public async Task RemoveSkillFromUser(Employee user, int skillId)
     {
         var skill = await context.Skills.FirstOrDefaultAsync(se => se.Id == skillId);
         if (skill == null)

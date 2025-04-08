@@ -1,11 +1,10 @@
 using System.Security.Claims;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nikolo.Api.Responses.User;
-using Nikolo.Data.DTOs;
 using Nikolo.Data.DTOs.Skill;
 using Nikolo.Data.DTOs.User;
-using Nikolo.Data.Mappers;
 using Nikolo.Logic.Contracts;
 
 namespace Nikolo.Api.Controllers;
@@ -13,12 +12,14 @@ namespace Nikolo.Api.Controllers;
 /// <summary>
 /// Handles user related actions
 /// </summary>
-/// <dependency><see cref="IUserRepository"/></dependency>
+/// <dependency><see cref="IUserService"/></dependency>
 [ApiController]
 [Route("[controller]")]
-public class UsersController(IUserRepository userRepository, IUserTimeService userTimeService)
+public class UsersController(IUserService userService, IUserTimeService userTimeService, IMapper mapper)
     : ControllerBase
 {
+    private readonly IMapper mapper = mapper;
+    
     /// <summary>
     /// Saves a user from the JWT claim if they do not already exist in the system.
     /// </summary>
@@ -31,7 +32,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     /// </returns>
     /// <response code="201">User successfully added.</response>
     /// <response code="401">Unauthorized - No valid Auth0 ID found.</response>
-    [Authorize("read:messages")]
+    [Authorize]
     [HttpPost("", Name = nameof(SaveUser))]
     [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(UserCreatedResponse))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
@@ -44,7 +45,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
             return Unauthorized("Auth0ID not found.");
         }
         
-        var user= await userRepository.CreateUser(auth0Id);
+        var user= await userService.CreateUser(auth0Id);
         
         return Created(string.Empty, new { Message = "User saved successfully", User = user });
     }
@@ -66,7 +67,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     [ProducesResponseType(StatusCodes.Status200OK, Type = null!)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [HttpPost("skill", Name = nameof(SignUpForSkill))]
-    [Authorize("read:messages")]
+    [Authorize]
     public async Task<IActionResult> SignUpForSkill([FromBody] SignUpForSkillDto skillDto)
     {
         var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -77,15 +78,15 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
         }
 
         var createdUser = false;
-        var user = await userRepository.GetUser(auth0Id);
+        var user = await userService.GetUser(auth0Id);
 
         if (user == null)
         {
-            user = await userRepository.CreateUser(auth0Id);
+            user = await userService.CreateUser(auth0Id);
             createdUser = true;
         }
 
-        await userRepository.AddSkill(user, skillDto.SkillId);
+        await userService.AddSkillToUser(user, skillDto.SkillId);
         return createdUser ? Created(string.Empty, new { Message = "User saved successfully", User = user }) : Ok();
     }
 
@@ -107,7 +108,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<SkillDto>))]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [HttpGet("skill", Name = nameof(GetSkills))]
-    [Authorize("read:messages")]
+    [Authorize]
     public async Task<ActionResult<List<SkillDto>>> GetSkills()
     {
         var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -118,17 +119,17 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
         }
 
         var createdUser = false;
-        var user = await userRepository.GetUser(auth0Id);
+        var user = await userService.GetUser(auth0Id);
 
         if (user == null)
         {
-            user = await userRepository.CreateUser(auth0Id);
+            user = await userService.CreateUser(auth0Id);
             createdUser = true;
         }
         
-        var skills = await userRepository.GetSkills(user);
+        var skills = await userService.GetSkillsFromUser(user);
 
-        var skillDtos = skills.Select(s => s.ToSkillDto());
+        var skillDtos = mapper.Map<List<SkillDto>>(skills);
         
         return createdUser
             ? Created(string.Empty, skillDtos)
@@ -152,7 +153,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     [ProducesResponseType(StatusCodes.Status204NoContent, Type = null!)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [HttpDelete("skill/{skillid}", Name = nameof(RemoveSkill))]
-    [Authorize("read:messages")]
+    [Authorize]
     public async Task<IActionResult> RemoveSkill([FromRoute] int skillId)
     {
         var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -162,18 +163,19 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
             return Unauthorized("Auth0 ID not found.");
         }
 
-        var user = await userRepository.GetUser(auth0Id);
+        var user = await userService.GetUser(auth0Id);
 
         if (user == null)
         {
-            user = await userRepository.CreateUser(auth0Id);
+            user = await userService.CreateUser(auth0Id);
             return Created(string.Empty, new { Message = "User saved successfully", User = user });
         }
         
-        await userRepository.RemoveSkill(user, skillId);
+        await userService.RemoveSkillFromUser(user, skillId);
         return NoContent();
     }
 
+    
     /// <summary>
     /// Adds a Time to an user
     /// </summary>
@@ -193,7 +195,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [HttpPost("time", Name = nameof(AddAvailableTime))]
-    [Authorize("read:messages")]
+    [Authorize]
     public async Task<IActionResult> AddAvailableTime([FromBody] AvailableTimeCreateDto availableTimeCreateDto)
     {
         var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
@@ -203,11 +205,11 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
         }
         
         var createdUser = false;
-        var user = await userRepository.GetUser(auth0Id);
+        var user = await userService.GetUser(auth0Id);
 
         if (user == null)
         {
-            user = await userRepository.CreateUser(auth0Id);
+            user = await userService.CreateUser(auth0Id);
             createdUser = true;
         }
         
@@ -242,7 +244,7 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
     [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(string))]
     [ProducesResponseType(StatusCodes.Status200OK, Type = null!)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
-    [Authorize("read:messages")]
+    [Authorize]
     [HttpPut("time", Name = nameof(EditAvailableTime))]
     public async Task<IActionResult> EditAvailableTime([FromBody] AvailableTimeEditDto availableTimeEditDto)
     {
@@ -253,11 +255,11 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
             return Unauthorized("Auth0 ID not found.");
         }
 
-        var user = await userRepository.GetUser(auth0Id);
+        var user = await userService.GetUser(auth0Id);
 
         if (user == null)
         {
-            user = await userRepository.CreateUser(auth0Id);
+            user = await userService.CreateUser(auth0Id);
             return Created(string.Empty, new { Message = "User saved successfully", User = user });
         }
 
@@ -269,5 +271,83 @@ public class UsersController(IUserRepository userRepository, IUserTimeService us
         }
 
         return Ok();
+    }
+
+    /// <summary>
+    /// Get the times of an user
+    /// </summary>
+    /// <remarks>
+    /// This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+    /// and uses it to return all time of an user, if no user is yet created it will be created along the way
+    /// </remarks>
+    /// <returns>
+    /// A List of the Available Times the User has registered
+    /// </returns>
+    /// <response code="201">User was not yet created, but was along the execution</response>
+    /// <response code="200">Successfully passed</response>
+    /// <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(UserCreatedResponse))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AvailableTimeReturnDto>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
+    [Authorize]
+    [HttpGet("time", Name = nameof(GetAvailableTimes))]
+    public async Task<ActionResult<List<AvailableTimeReturnDto>>> GetAvailableTimes()
+    {
+        var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(auth0Id))
+        {
+            return Unauthorized("Auth0 ID not found.");
+        }
+
+        var user = await userService.GetUser(auth0Id);
+
+        if (user == null)
+        {
+            user = await userService.CreateUser(auth0Id);
+            return Created(string.Empty, new { Message = "User saved successfully", User = user });
+        }
+        
+        var times = userTimeService.GetAvailableTimes(user);
+        return Ok(mapper.Map<AvailableTimeReturnDto>(times));
+    }
+    
+    /// <summary>
+    /// Get the times of an user of a given day
+    /// </summary>
+    /// <remarks>
+    /// This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+    /// and uses it to return all time of an user of a specific date, if no user is yet created it will be created along the way
+    /// </remarks>
+    /// <returns>
+    /// A List of the Available Times the User has registered to a specific date
+    /// </returns>
+    /// <response code="201">User was not yet created, but was along the execution</response>
+    /// <response code="200">Successfully passed</response>
+    /// <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+    [ProducesResponseType(StatusCodes.Status201Created, Type = typeof(UserCreatedResponse))]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<AvailableTimeReturnDto>))]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized, Type = null!)]
+    [Authorize]
+    [HttpGet("time/{date}", Name = nameof(GetAvailableTimesByDate))]
+    public async Task<ActionResult<List<AvailableTimeReturnDto>>> GetAvailableTimesByDate([FromRoute] DateOnly date)
+    {
+        var auth0Id = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        
+        if (string.IsNullOrEmpty(auth0Id))
+        {
+            return Unauthorized("Auth0 ID not found.");
+        }
+
+        var user = await userService.GetUser(auth0Id);
+
+        if (user == null)
+        {
+            user = await userService.CreateUser(auth0Id);
+            return Created(string.Empty, new { Message = "User saved successfully", User = user });
+        }
+        
+        var times = userTimeService.GetAvailableTimesForDay(user, date);
+        return Ok(mapper.Map<AvailableTimeReturnDto>(times));
     }
 }

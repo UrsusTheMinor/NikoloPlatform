@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nikolo.Data;
+using Nikolo.Data.DTOs.Skill;
 using Nikolo.Data.Models;
 using Nikolo.Logic.Contracts;
 
@@ -10,19 +11,20 @@ public class SkillService(ApplicationDbContext context, ILogger<UserService> log
 {
     private readonly ILogger<UserService> logger = logger;
 
-    public async Task AddSkill(string skillname)
+    public async Task CreateSkill(CreateSkillDto skillDto)
     {
         await context.Skills.AddAsync(new Skill()
         {
-            SkillName = skillname,
+            SkillName = skillDto.SkillName,
         });
         await context.SaveChangesAsync();
-        logger.LogInformation("Successfully added Skill: {Name}", skillname);
+        logger.LogInformation("Successfully added Skill: {Name}", skillDto.SkillName);
     }
 
-    public async Task<List<Skill>> GetSkills()
+    public async Task<List<Skill>> GetAllSkills()
     {
-        return await context.Skills.ToListAsync();
+        var skills = await context.Skills.ToListAsync();
+        return skills;
     }
 
     public async Task<Skill?> GetSkill(int skillId)

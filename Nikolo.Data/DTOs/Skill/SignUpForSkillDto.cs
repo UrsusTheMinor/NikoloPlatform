@@ -1,4 +1,4 @@
-namespace Nikolo.Data.DTOs;
+namespace Nikolo.Data.DTOs.Skill;
 
 public class SignUpForSkillDto
 {

@@ -1,8 +1,8 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nikolo.Data;
 using Nikolo.Data.DTOs.User;
-using Nikolo.Data.Mappers;
 using Nikolo.Data.Models;
 using Nikolo.Logic.Contracts;
 
@@ -12,12 +12,12 @@ public class UserTimeService(ApplicationDbContext context, ILogger<UserTimeServi
 {
     private readonly ILogger<UserTimeService> logger = logger;
 
-    public async Task<AvailableTimeReturnDto?> AddTime(Employee user, AvailableTimeCreateDto availableTimeEdit)
+    public async Task<AvailableTime?> AddTime(Employee user, AvailableTimeCreateDto availableTimeCreateDto)
     {
         var overlappingTimes = await context.AvailableTimes
-            .Where(x => x.Date == availableTimeEdit.Date &&
-                        x.StartTime < availableTimeEdit.EndTime &&
-                        x.EndTime > availableTimeEdit.StartTime)
+            .Where(x => x.Date == availableTimeCreateDto.Date &&
+                        x.StartTime < availableTimeCreateDto.EndTime &&
+                        x.EndTime > availableTimeCreateDto.StartTime)
             .ToListAsync();
 
         if (overlappingTimes.Count > 1)
@@ -31,12 +31,11 @@ public class UserTimeService(ApplicationDbContext context, ILogger<UserTimeServi
 
         if (time != null)
         {
-            logger.LogInformation("Found AvailableTime with same date and start time, continue to editing existing time.");
-            await EditTime(user, availableTimeEdit.ToAvailableTimeEditDto(time.Id));
-            return time.ToAvailableTimeReturnDto();
+            logger.LogInformation("Found AvailableTime with same date and start time, exiting.");
+            return null;
         }
         
-        if (availableTimeEdit.EndTime <= availableTimeEdit.StartTime)
+        if (availableTimeCreateDto.EndTime <= availableTimeCreateDto.StartTime)
         {
             logger.LogWarning("Invalid time range: EndTime must be after StartTime.");
             return null;
@@ -45,18 +44,18 @@ public class UserTimeService(ApplicationDbContext context, ILogger<UserTimeServi
 
         var newTime = new AvailableTime()
         {
-            Date = availableTimeEdit.Date,
-            StartTime = availableTimeEdit.StartTime,
-            EndTime = availableTimeEdit.EndTime,
+            Date = availableTimeCreateDto.Date,
+            StartTime = availableTimeCreateDto.StartTime,
+            EndTime = availableTimeCreateDto.EndTime,
             Employee = user
         };
         
         await context.AvailableTimes.AddAsync(newTime);
         await context.SaveChangesAsync();
-        return newTime.ToAvailableTimeReturnDto();
+        return newTime;
     }
 
-    public async Task<AvailableTimeReturnDto?> EditTime(Employee user, AvailableTimeEditDto availableTimeEdit)
+    public async Task<AvailableTime?> EditTime(Employee user, AvailableTimeEditDto availableTimeEdit)
     {
         var time = await context.AvailableTimes.FirstOrDefaultAsync(x => x.Id == availableTimeEdit.Id);
 
@@ -94,25 +93,23 @@ public class UserTimeService(ApplicationDbContext context, ILogger<UserTimeServi
         }
 
         await context.SaveChangesAsync();
-        return time.ToAvailableTimeReturnDto();
+        return time;
     }
 
 
 
-    public async Task<List<AvailableTimeReturnDto>> GetAvailableTimes(Employee user)
+    public async Task<List<AvailableTime>> GetAvailableTimes(Employee user)
     {
         return await context.AvailableTimes
             .Where(x => x.Employee == user)
-            .Select(x => x.ToAvailableTimeReturnDto())
             .ToListAsync();
     }
 
-    public async Task<List<AvailableTimeReturnDto>> GetAvailableTimesForDay(Employee user, DateOnly date)
+    public async Task<List<AvailableTime>> GetAvailableTimesForDay(Employee user, DateOnly date)
     {
         return await context.AvailableTimes
             .Where(x => x.Employee == user)
             .Where(x => x.Date == date)
-            .Select(x => x.ToAvailableTimeReturnDto())
             .ToListAsync();
     }
 }

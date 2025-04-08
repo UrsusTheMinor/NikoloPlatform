@@ -8,13 +8,13 @@
             <summary>
             Handles user related actions
             </summary>
-            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserRepository"/></dependency>
+            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserService"/></dependency>
         </member>
-        <member name="M:Nikolo.Api.Controllers.UsersController.#ctor(Nikolo.Logic.Contracts.IUserRepository,Nikolo.Logic.Contracts.IUserTimeService)">
+        <member name="M:Nikolo.Api.Controllers.UsersController.#ctor(Nikolo.Logic.Contracts.IUserService,Nikolo.Logic.Contracts.IUserTimeService,AutoMapper.IMapper)">
             <summary>
             Handles user related actions
             </summary>
-            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserRepository"/></dependency>
+            <dependency><see cref="T:Nikolo.Logic.Contracts.IUserService"/></dependency>
         </member>
         <member name="M:Nikolo.Api.Controllers.UsersController.SaveUser">
             <summary>
@@ -30,7 +30,7 @@
             <response code="201">User successfully added.</response>
             <response code="401">Unauthorized - No valid Auth0 ID found.</response>
         </member>
-        <member name="M:Nikolo.Api.Controllers.UsersController.SignUpForSkill(Nikolo.Data.DTOs.SignUpForSkillDto)">
+        <member name="M:Nikolo.Api.Controllers.UsersController.SignUpForSkill(Nikolo.Data.DTOs.Skill.SignUpForSkillDto)">
             <summary>
             Signs the logged-in user up for a skill.
             </summary>
@@ -108,6 +108,36 @@
             <response code="201">User was not yet created, but was along the execution</response>
             <response code="400">Time was not yet created </response>
             <response code="200">Time was successfully edited</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.GetAvailableTimes">
+            <summary>
+            Get the times of an user
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to return all time of an user, if no user is yet created it will be created along the way
+            </remarks>
+            <returns>
+            A List of the Available Times the User has registered
+            </returns>
+            <response code="201">User was not yet created, but was along the execution</response>
+            <response code="200">Successfully passed</response>
+            <response code="401">Unauthorized - No valid Auth0 ID found.</response>
+        </member>
+        <member name="M:Nikolo.Api.Controllers.UsersController.GetAvailableTimesByDate(System.DateOnly)">
+            <summary>
+            Get the times of an user of a given day
+            </summary>
+            <remarks>
+            This endpoint extracts the Auth0 user ID ("sub" claim) from the JWT token
+            and uses it to return all time of an user of a specific date, if no user is yet created it will be created along the way
+            </remarks>
+            <returns>
+            A List of the Available Times the User has registered to a specific date
+            </returns>
+            <response code="201">User was not yet created, but was along the execution</response>
+            <response code="200">Successfully passed</response>
             <response code="401">Unauthorized - No valid Auth0 ID found.</response>
         </member>
         <member name="T:Nikolo.Api.Responses.User.UserCreatedResponse">

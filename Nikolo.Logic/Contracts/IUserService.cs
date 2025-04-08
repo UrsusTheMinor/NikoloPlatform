@@ -1,3 +1,4 @@
+using Nikolo.Data.DTOs.Skill;
 using Nikolo.Data.Models;
 
 namespace Nikolo.Logic.Contracts;
@@ -5,7 +6,7 @@ namespace Nikolo.Logic.Contracts;
 /// <summary>
 /// Defines the contract for user management, including user creation, retrieval, and buddy connections.
 /// </summary>
-public interface IUserRepository
+public interface IUserService
 {
     /// <summary>
     /// Creates a new user in the Employees table if they do not already exist.
@@ -35,10 +36,9 @@ public interface IUserRepository
     /// <param name="user">The employee to whom the skill will be assigned.</param>
     /// <param name="skillId">The unique identifier of the skill to assign.</param>
     /// <returns>A task that resolves to <c>true</c> if the skill was successfully assigned; otherwise, <c>false</c>.</returns>
-    Task<bool> AddSkill(Employee user, int skillId);
+    Task<bool> AddSkillToUser(Employee user, int skillId);
     
-    Task<List<Skill>> GetSkills(Employee user);
+    Task<List<Skill>> GetSkillsFromUser(Employee user);
     
-    Task RemoveSkill(Employee user, int skillId);
-    
+    Task RemoveSkillFromUser(Employee user, int skillId);
 }

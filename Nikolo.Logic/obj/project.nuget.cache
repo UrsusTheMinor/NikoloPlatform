@@ -1,9 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "Z1HqIECgv0U=",
+  "dgSpecHash": "bJh7aMNU1To=",
   "success": true,
   "projectFilePath": "/home/reini/projects/Nikolo/Nikolo.Logic/Nikolo.Logic.csproj",
   "expectedPackageFiles": [
+    "/home/reini/.nuget/packages/automapper/14.0.0/automapper.14.0.0.nupkg.sha512",
     "/home/reini/.nuget/packages/azure.core/1.38.0/azure.core.1.38.0.nupkg.sha512",
     "/home/reini/.nuget/packages/azure.identity/1.11.4/azure.identity.1.11.4.nupkg.sha512",
     "/home/reini/.nuget/packages/microsoft.bcl.asyncinterfaces/1.1.1/microsoft.bcl.asyncinterfaces.1.1.1.nupkg.sha512",
@@ -67,12 +68,5 @@
     "/home/reini/.nuget/packages/system.threading.tasks.extensions/4.5.4/system.threading.tasks.extensions.4.5.4.nupkg.sha512",
     "/home/reini/.nuget/packages/system.windows.extensions/6.0.0/system.windows.extensions.6.0.0.nupkg.sha512"
   ],
-  "logs": [
-    {
-      "code": "NU1900",
-      "level": "Warning",
-      "warningLevel": 1,
-      "message": "Error occurred while getting package vulnerability data: Unable to load the service index for source https://api.nuget.org/v3/index.json."
-    }
-  ]
+  "logs": []
 }
