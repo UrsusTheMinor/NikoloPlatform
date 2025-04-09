@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Nikolo.Data;
 
@@ -11,9 +12,11 @@ using Nikolo.Data;
 namespace Nikolo.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250409073710_Added Form Generation: InformationGroup, updated InformationType")]
+    partial class AddedFormGenerationInformationGroupupdatedInformationType
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -197,7 +200,7 @@ namespace Nikolo.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("InformationGroups");
+                    b.ToTable("InformationGroup");
                 });
 
             modelBuilder.Entity("Nikolo.Data.Models.InformationType", b =>

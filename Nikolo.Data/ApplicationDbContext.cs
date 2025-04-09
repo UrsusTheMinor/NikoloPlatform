@@ -12,7 +12,9 @@ public class ApplicationDbContext : DbContext
     public DbSet<Child> Children { get; set; }
     public DbSet<DateTimeSlots> DateTimeSlots { get; set; }
     public DbSet<Employee> Employees { get; set; }
+    
     public DbSet<InformationType> InformationTypes { get; set; }
+    public DbSet<InformationGroup> InformationGroups { get; set; }
     public DbSet<Skill> Skills { get; set; }
     public DbSet<SkillEmployee> SkillEmployees { get; set; }
     public DbSet<Team> Teams { get; set; }
