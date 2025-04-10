@@ -11,14 +11,16 @@ public class SkillService(ApplicationDbContext context, ILogger<UserService> log
 {
     private readonly ILogger<UserService> logger = logger;
 
-    public async Task CreateSkill(CreateSkillDto skillDto)
+    public async Task<Skill> CreateSkill(CreateSkillDto skillDto)
     {
-        await context.Skills.AddAsync(new Skill()
+        var skill = new Skill()
         {
             SkillName = skillDto.SkillName,
-        });
+        };
+        await context.Skills.AddAsync(skill);
         await context.SaveChangesAsync();
         logger.LogInformation("Successfully added Skill: {Name}", skillDto.SkillName);
+        return skill;
     }
 
     public async Task<List<Skill>> GetAllSkills()

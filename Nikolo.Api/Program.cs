@@ -69,6 +69,7 @@ builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ISkillService, SkillService>();
 builder.Services.AddScoped<IUserTimeService, UserTimeService>();
+builder.Services.AddScoped<IFormService, FormService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -91,7 +92,7 @@ builder.Services.AddSwaggerGen(options =>
     options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));  
 });
 
-builder.Services.AddAutoMapper(typeof(AvailableTimeMappingProfile), typeof(SkillMappingProfile));
+builder.Services.AddAutoMapper(typeof(AvailableTimeMappingProfile), typeof(SkillMappingProfile),typeof(FormMappingProfile));
 
 var app = builder.Build();
 

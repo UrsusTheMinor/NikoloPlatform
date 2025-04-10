@@ -8,4 +8,5 @@ public class InformationType
     public InformationGroup? Group { get; set; } = null;
     public int Index { get; set; }
     public int Width { get; set; } = -1;
+    public string placeholder { get; set; } = string.Empty;
 }

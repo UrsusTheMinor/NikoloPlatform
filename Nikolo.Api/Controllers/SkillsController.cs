@@ -18,8 +18,8 @@ public class SkillsController(ISkillService skillService, IMapper mapper)
     [Authorize("skills:create")]
     public async Task<IActionResult> CreateSkill([FromBody] CreateSkillDto skillDto)
     {
-        await skillService.CreateSkill(skillDto);
-        return Ok();
+        var skill = await skillService.CreateSkill(skillDto);
+        return Created(string.Empty, new { Message = "User saved successfully", Skill = skill });
     }
     
     [HttpGet(Name = nameof(GetAllSkills))]

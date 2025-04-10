@@ -14,7 +14,7 @@ public interface ISkillService
     /// </summary>
     /// <param name="skillDto">SkillDto which includes information on how a Skill should be created.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    Task CreateSkill(CreateSkillDto skillDto);
+    Task<Skill> CreateSkill(CreateSkillDto skillDto);
     
     /// <summary>
     /// Retrieves a list of all skills from the database.
