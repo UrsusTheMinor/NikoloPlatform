@@ -11,5 +11,6 @@ public class FormMappingProfile : Profile
         CreateMap<InformationTypeCreateDto, InformationType>()
             .ForMember(dest => dest.Group, opt => opt.Ignore());
         CreateMap<InformationGroupCreateDto, InformationGroup>();
+        CreateMap<InformationType, InformationTypeReturnDto>();
     }
 }

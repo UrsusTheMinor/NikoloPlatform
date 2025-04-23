@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Nikolo.Data")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+985f4d5c4ed6a84845622be4a18d9be10b15756f")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+43763bfd918e2f02757497508d671ce2d9a229dc")]
 [assembly: System.Reflection.AssemblyProductAttribute("Nikolo.Data")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Nikolo.Data")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
