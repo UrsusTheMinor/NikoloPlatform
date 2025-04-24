@@ -1,7 +1,6 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
 using Nikolo.Data.DTOs.InformationForm;
 using Nikolo.Data.Models;
 using Nikolo.Logic.Contracts;
@@ -10,7 +9,7 @@ namespace Nikolo.Api.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class AdminController(IMapper mapper, IFormService formService)
+public class InformationTypeController(IMapper mapper, IFormService formService)
     : ControllerBase
 {
     private readonly IMapper mapper = mapper;
@@ -74,13 +73,4 @@ public class AdminController(IMapper mapper, IFormService formService)
         return await formService.GetInformationTypeById(id);
     }
     
-    // TODO: InformationGroup: Edit, Delete
-    
-    [HttpPost]
-    [Authorize("form:edit")]
-    public async Task<IActionResult> AddInformationGroup([FromBody] InformationGroupCreateDto createDto)
-    {
-        var infoGroup = await formService.SaveInformationGroup(createDto);
-        return Created(string.Empty, new { Message = "InformationGroup added successfully", InformationGroup = infoGroup });
-    }
 }

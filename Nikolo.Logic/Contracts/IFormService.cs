@@ -5,7 +5,7 @@ namespace Nikolo.Logic.Contracts;
 
 public interface IFormService
 {
-    Task<InformationGroup?> GetGroupById(int groupId);
+    Task<InformationGroup?> GetGroupById(int? groupId);
     Task<InformationType> SaveInformationType(InformationTypeCreateDto createDto);
     Task<InformationType?> EditInformationType(InformationTypeEditDto editDto);
     Task DeleteInformationType(int id);

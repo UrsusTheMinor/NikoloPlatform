@@ -9,4 +9,7 @@ public class InformationType
     public int Index { get; set; }
     public int Width { get; set; } = -1;
     public string Placeholder { get; set; } = string.Empty;
+    public DateTime CreatedOn { get; set; } = DateTime.Now;
+    public DateTime ModifiedOn { get; set; } = DateTime.Now;
+    public DateTime? DeletedOn { get; set; }
 }

@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nikolo.Data;
 using Nikolo.Data.DTOs.InformationForm;
+using Nikolo.Data.Extensions;
 using Nikolo.Data.Models;
 using Nikolo.Logic.Contracts;
 
@@ -13,7 +14,7 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
 {
     private readonly IMapper mapper = mapper;
 
-    public async Task<InformationGroup?> GetGroupById(int groupId)
+    public async Task<InformationGroup?> GetGroupById(int? groupId)
     {
         return await context.InformationGroups.Where(x => x.Id == groupId).FirstOrDefaultAsync();
     }
@@ -25,9 +26,9 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
         var infoType = mapper.Map<InformationType>(createDto);
         infoType.Group = group;
 
-        context.InformationTypes.Add(infoType);
 
         var itemsToUpdate = context.InformationTypes
+            .NotDeleted()
             .Where(i => i.Group == group && i.Index >= createDto.Index);
 
         foreach (var item in itemsToUpdate)
@@ -47,19 +48,24 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
             }
         }
 
+        context.InformationTypes.Add(infoType);
+
+
         await context.SaveChangesAsync();
         return infoType;
     }
 
     public async Task<InformationType?> EditInformationType(InformationTypeEditDto editDto)
     {
-        var infoType = await context.InformationTypes.FirstOrDefaultAsync(x => x.Id == editDto.Id);
+        var infoType = await context.InformationTypes
+            .NotDeleted()
+            .FirstOrDefaultAsync(x => x.Id == editDto.Id);
 
         if (infoType == null)
         {
             return null;
         }
-        
+
         if (!string.IsNullOrWhiteSpace(editDto.TypeName))
         {
             infoType.TypeName = editDto.TypeName;
@@ -80,72 +86,144 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
             infoType.Placeholder = editDto.Placeholder;
         }
 
+        infoType.ModifiedOn = DateTime.Now;
+
         await context.SaveChangesAsync();
         return infoType;
     }
 
     public async Task DeleteInformationType(int id)
     {
-        var infoType = await context.InformationTypes.FirstOrDefaultAsync(x => x.Id == id);
+        var infoType = await context.InformationTypes
+            .NotDeleted()
+            .FirstOrDefaultAsync(x => x.Id == id);
 
         if (infoType == null)
         {
             return;
         }
-        
-        context.InformationTypes.Remove(infoType);
+
+        infoType.DeletedOn = DateTime.Now;
+        infoType.Group = null;
+        infoType.Index = -1;
+
+        var affectedTypes = await context.InformationTypes
+            .NotDeleted()
+            .Where(x => x.Index > infoType.Index)
+            .ToListAsync();
+
+        var affectedGroups = await context.InformationGroups
+            .Where(x => x.Index > infoType.Index)
+            .ToListAsync();
+
+        foreach (var info in affectedTypes)
+        {
+            info.Index -= 1;
+        }
+
+        foreach (var group in affectedGroups)
+        {
+            group.Index -= 1;
+        }
+
         await context.SaveChangesAsync();
     }
 
-    // WARN : I HAVE NO IDEA IF THIS METHODS WORKS (CHATGPT MAGIC), what i have checked it should work
     public async Task<bool> InformationTypeMove(InformationTypeMoveDto moveDto)
     {
-        // Assuming you have a DbContext named _context and a DbSet<InformationType> named InformationTypes
-        var item = await context.InformationTypes.FirstOrDefaultAsync(x => x.Id == moveDto.Id);
-        if (item == null)
-            return false;
+        var item = await context.InformationTypes
+            .NotDeleted()
+            .FirstOrDefaultAsync(x => x.Id == moveDto.Id);
 
-        int fromIndex = item.Index;
-        int toIndex = moveDto.ToIndex;
+        if (item == null) return false;
 
-        if (fromIndex == toIndex)
-            return true; // No movement needed
+        var fromIndex = item.Index;
+        var toIndex = moveDto.ToIndex;
+
+        if (fromIndex == toIndex) return true;
+        if (toIndex < 0) return false;
+
+        // Determine the max index from both InformationTypes and InformationGroups
+        var maxTypeIndex = await context.InformationTypes
+            .NotDeleted()
+            .Select(x => (int?)x.Index)
+            .MaxAsync() ?? -1;
+
+        var maxGroupIndex = await context.InformationGroups
+            .Select(x => (int?)x.Index)
+            .MaxAsync() ?? -1;
+
+        var maxIndex = Math.Max(maxTypeIndex, maxGroupIndex);
+
+        if (toIndex > maxIndex)
+        {
+            toIndex = maxIndex;
+        }
 
         if (fromIndex < toIndex)
         {
-            // Moving down: decrease index of items between fromIndex+1 and toIndex
-            var affected = await context.InformationTypes
-                .Where(x => x.Index > fromIndex && x.Index <= toIndex)
-                .ToListAsync();
-
-            foreach (var info in affected)
-            {
-                info.Index -= 1;
-            }
+            await ShiftIndexesDown(fromIndex, toIndex);
         }
         else
         {
-            // Moving up: increase index of items between toIndex and fromIndex-1
-            var affected = await context.InformationTypes
-                .Where(x => x.Index >= toIndex && x.Index < fromIndex)
-                .ToListAsync();
-
-            foreach (var info in affected)
-            {
-                info.Index += 1;
-            }
+            await ShiftIndexesUp(toIndex, fromIndex);
         }
 
         item.Index = toIndex;
 
         await context.SaveChangesAsync();
-
         return true;
     }
+
+    private async Task ShiftIndexesDown(int fromIndex, int toIndex)
+    {
+        var affectedTypes = await context.InformationTypes
+            .NotDeleted()
+            .Where(x => x.Index > fromIndex && x.Index <= toIndex)
+            .ToListAsync();
+
+        var affectedGroups = await context.InformationGroups
+            .Where(x => x.Index > fromIndex && x.Index <= toIndex)
+            .ToListAsync();
+
+        foreach (var type in affectedTypes)
+        {
+            type.Index -= 1;
+        }
+
+        foreach (var group in affectedGroups)
+        {
+            group.Index -= 1;
+        }
+    }
+
+    private async Task ShiftIndexesUp(int toIndex, int fromIndex)
+    {
+        var affectedTypes = await context.InformationTypes
+            .NotDeleted()
+            .Where(x => x.Index >= toIndex && x.Index < fromIndex)
+            .ToListAsync();
+
+        var affectedGroups = await context.InformationGroups
+            .Where(x => x.Index >= toIndex && x.Index < fromIndex)
+            .ToListAsync();
+
+        foreach (var type in affectedTypes)
+        {
+            type.Index += 1;
+        }
+
+        foreach (var group in affectedGroups)
+        {
+            group.Index += 1;
+        }
+    }
+
 
     public async Task<List<InformationTypeReturnDto>> GetAllInformationTypes()
     {
         return await context.InformationTypes
+            .NotDeleted()
             .ProjectTo<InformationTypeReturnDto>(mapper.ConfigurationProvider)
             .ToListAsync();
     }
@@ -154,17 +232,20 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
     {
         return await context.InformationTypes
             .Where(x => x.Id == id)
+            .NotDeleted()
             .ProjectTo<InformationTypeReturnDto>(mapper.ConfigurationProvider)
             .FirstOrDefaultAsync();
     }
 
 
+    //TODO 
     public async Task<InformationGroup> SaveInformationGroup(InformationGroupCreateDto createDto)
     {
         var group = mapper.Map<InformationGroup>(createDto);
         context.InformationGroups.Add(group);
 
         var itemsToUpdate = context.InformationTypes
+            .NotDeleted()
             .Where(i => i.Index >= createDto.Index);
 
         foreach (var item in itemsToUpdate)
@@ -180,8 +261,8 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
         {
             grp.Index += 1;
         }
-        
+
         await context.SaveChangesAsync();
-        return group;   
+        return group;
     }
 }
