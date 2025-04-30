@@ -1,4 +1,5 @@
 using Nikolo.Data.Models;
+using Nikolo.Data.Models.Form;
 
 namespace Nikolo.Data.Extensions;
 

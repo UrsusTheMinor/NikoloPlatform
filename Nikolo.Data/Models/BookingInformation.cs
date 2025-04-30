@@ -1,3 +1,5 @@
+using Nikolo.Data.Models.Form;
+
 namespace Nikolo.Data.Models;
 
 public class BookingInformation

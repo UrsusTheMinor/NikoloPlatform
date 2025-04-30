@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Nikolo.Data.Models;
+using Nikolo.Data.Models.Form;
 
 namespace Nikolo.Data;
 
@@ -51,7 +52,7 @@ public class ApplicationDbContext : DbContext
             .WithMany()
             .HasForeignKey(tb => tb.Employee2Id)
             .OnDelete(DeleteBehavior.NoAction);
-
+        
     }
 
 }

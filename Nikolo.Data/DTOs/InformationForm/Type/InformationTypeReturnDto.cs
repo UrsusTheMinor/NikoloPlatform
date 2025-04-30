@@ -1,4 +1,4 @@
-namespace Nikolo.Data.DTOs.InformationForm;
+namespace Nikolo.Data.DTOs.InformationForm.Type;
 
 public class InformationTypeReturnDto
 {

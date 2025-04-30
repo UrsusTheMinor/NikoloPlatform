@@ -4,8 +4,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Nikolo.Data;
 using Nikolo.Data.DTOs.InformationForm;
+using Nikolo.Data.DTOs.InformationForm.Group;
+using Nikolo.Data.DTOs.InformationForm.Type;
 using Nikolo.Data.Extensions;
-using Nikolo.Data.Models;
+using Nikolo.Data.Models.Form;
 using Nikolo.Logic.Contracts;
 
 namespace Nikolo.Logic.Services;
@@ -22,33 +24,29 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
     public async Task<InformationType> SaveInformationType(InformationTypeCreateDto createDto)
     {
         var group = await GetGroupById(createDto.GroupId);
-
         var infoType = mapper.Map<InformationType>(createDto);
         infoType.Group = group;
 
-
-        var itemsToUpdate = context.InformationTypes
+        var itemsToUpdate = new List<InformationItem>();
+        itemsToUpdate.AddRange(await context.InformationTypes
             .NotDeleted()
-            .Where(i => i.Group == group && i.Index >= createDto.Index);
-
-        foreach (var item in itemsToUpdate)
-        {
-            item.Index += 1;
-        }
+            .Where(i => i.Group == group)
+            .ToListAsync());
 
 
         if (group == null)
         {
-            var groupsToUpdate = context.InformationGroups
-                .Where(i => i.Index >= createDto.Index);
-
-            foreach (var grp in groupsToUpdate)
-            {
-                grp.Index += 1;
-            }
+            var groups = await context.InformationGroups.ToListAsync();
+            itemsToUpdate.AddRange(groups);
         }
 
         context.InformationTypes.Add(infoType);
+        itemsToUpdate.Insert(createDto.Index, infoType);
+
+        for (int i = 0; i < itemsToUpdate.Count; i++)
+        {
+            itemsToUpdate[i].Index = i;
+        }
 
 
         await context.SaveChangesAsync();
@@ -68,7 +66,7 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
 
         if (!string.IsNullOrWhiteSpace(editDto.TypeName))
         {
-            infoType.TypeName = editDto.TypeName;
+            infoType.Name = editDto.TypeName;
         }
 
         if (!string.IsNullOrWhiteSpace(editDto.FieldType))
@@ -103,122 +101,32 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
             return;
         }
 
+        var itemsToUpdate = new List<InformationItem>();
+        itemsToUpdate.AddRange(await context.InformationTypes
+            .NotDeleted()
+            .Where(i => i.Group == infoType.Group)
+            .ToListAsync());
+
+
+        if (infoType.Group == null)
+        {
+            var groups = await context.InformationGroups.ToListAsync();
+            itemsToUpdate.AddRange(groups);
+        }
+
+        itemsToUpdate.Remove(infoType);
+
         infoType.DeletedOn = DateTime.Now;
         infoType.Group = null;
         infoType.Index = -1;
 
-        var affectedTypes = await context.InformationTypes
-            .NotDeleted()
-            .Where(x => x.Index > infoType.Index)
-            .ToListAsync();
-
-        var affectedGroups = await context.InformationGroups
-            .Where(x => x.Index > infoType.Index)
-            .ToListAsync();
-
-        foreach (var info in affectedTypes)
+        for (int i = 0; i < itemsToUpdate.Count; i++)
         {
-            info.Index -= 1;
-        }
-
-        foreach (var group in affectedGroups)
-        {
-            group.Index -= 1;
+            itemsToUpdate[i].Index = i;
         }
 
         await context.SaveChangesAsync();
     }
-
-    public async Task<bool> InformationTypeMove(InformationTypeMoveDto moveDto)
-    {
-        var item = await context.InformationTypes
-            .NotDeleted()
-            .FirstOrDefaultAsync(x => x.Id == moveDto.Id);
-
-        if (item == null) return false;
-
-        var fromIndex = item.Index;
-        var toIndex = moveDto.ToIndex;
-
-        if (fromIndex == toIndex) return true;
-        if (toIndex < 0) return false;
-
-        // Determine the max index from both InformationTypes and InformationGroups
-        var maxTypeIndex = await context.InformationTypes
-            .NotDeleted()
-            .Select(x => (int?)x.Index)
-            .MaxAsync() ?? -1;
-
-        var maxGroupIndex = await context.InformationGroups
-            .Select(x => (int?)x.Index)
-            .MaxAsync() ?? -1;
-
-        var maxIndex = Math.Max(maxTypeIndex, maxGroupIndex);
-
-        if (toIndex > maxIndex)
-        {
-            toIndex = maxIndex;
-        }
-
-        if (fromIndex < toIndex)
-        {
-            await ShiftIndexesDown(fromIndex, toIndex);
-        }
-        else
-        {
-            await ShiftIndexesUp(toIndex, fromIndex);
-        }
-
-        item.Index = toIndex;
-
-        await context.SaveChangesAsync();
-        return true;
-    }
-
-    private async Task ShiftIndexesDown(int fromIndex, int toIndex)
-    {
-        var affectedTypes = await context.InformationTypes
-            .NotDeleted()
-            .Where(x => x.Index > fromIndex && x.Index <= toIndex)
-            .ToListAsync();
-
-        var affectedGroups = await context.InformationGroups
-            .Where(x => x.Index > fromIndex && x.Index <= toIndex)
-            .ToListAsync();
-
-        foreach (var type in affectedTypes)
-        {
-            type.Index -= 1;
-        }
-
-        foreach (var group in affectedGroups)
-        {
-            group.Index -= 1;
-        }
-    }
-
-    private async Task ShiftIndexesUp(int toIndex, int fromIndex)
-    {
-        var affectedTypes = await context.InformationTypes
-            .NotDeleted()
-            .Where(x => x.Index >= toIndex && x.Index < fromIndex)
-            .ToListAsync();
-
-        var affectedGroups = await context.InformationGroups
-            .Where(x => x.Index >= toIndex && x.Index < fromIndex)
-            .ToListAsync();
-
-        foreach (var type in affectedTypes)
-        {
-            type.Index += 1;
-        }
-
-        foreach (var group in affectedGroups)
-        {
-            group.Index += 1;
-        }
-    }
-
 
     public async Task<List<InformationTypeReturnDto>> GetAllInformationTypes()
     {
@@ -237,32 +145,183 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
             .FirstOrDefaultAsync();
     }
 
-
-    //TODO 
     public async Task<InformationGroup> SaveInformationGroup(InformationGroupCreateDto createDto)
     {
-        var group = mapper.Map<InformationGroup>(createDto);
-        context.InformationGroups.Add(group);
+        var infoGroup = mapper.Map<InformationGroup>(createDto);
 
-        var itemsToUpdate = context.InformationTypes
+        var itemsToUpdate = new List<InformationItem>();
+        itemsToUpdate.AddRange(await context.InformationTypes
             .NotDeleted()
-            .Where(i => i.Index >= createDto.Index);
+            .Where(i => i.Group == null)
+            .ToListAsync());
 
-        foreach (var item in itemsToUpdate)
+
+        var groups = await context.InformationGroups.ToListAsync();
+        itemsToUpdate.AddRange(groups);
+
+
+        context.InformationGroups.Add(infoGroup);
+        itemsToUpdate.Insert(createDto.Index, infoGroup);
+
+        for (int i = 0; i < itemsToUpdate.Count; i++)
         {
-            item.Index += 1;
+            itemsToUpdate[i].Index = i;
         }
 
 
-        var groupsToUpdate = context.InformationGroups
-            .Where(i => i.Index >= createDto.Index);
+        await context.SaveChangesAsync();
+        return infoGroup;
+    }
 
-        foreach (var grp in groupsToUpdate)
+    public async Task<InformationGroup?> EditInformationGroup(InformationGroupEditDto editDto)
+    {
+        var infoGroup = await context.InformationGroups.FindAsync(editDto.Id);
+
+        if (infoGroup == null)
         {
-            grp.Index += 1;
+            return null;
+        }
+
+        if (!string.IsNullOrWhiteSpace(editDto.Name))
+        {
+            infoGroup.Name = editDto.Name;
+        }
+
+        if (editDto.ElementsPerRow.HasValue)
+        {
+            infoGroup.ElementsPerRow = editDto.ElementsPerRow.Value;
         }
 
         await context.SaveChangesAsync();
-        return group;
+
+        return infoGroup;
+    }
+
+    public async Task DeleteInformationGroup(int id)
+    {
+        var group = await context.InformationGroups.FindAsync(id);
+
+        if (group == null)
+        {
+            return;
+        }
+
+        var itemsToUpdate = new List<InformationItem>();
+        itemsToUpdate.AddRange(await context.InformationTypes
+            .NotDeleted()
+            .Where(i => i.Group == null)
+            .ToListAsync());
+
+        var groups = await context.InformationGroups.ToListAsync();
+        itemsToUpdate.AddRange(groups);
+
+        if (group.InformationTypes != null)
+        {
+            foreach (var type in group.InformationTypes)
+            {
+                itemsToUpdate.Insert(group.Index + group.InformationTypes.IndexOf(type), type);
+                type.Group = null;
+            }
+        }
+
+
+        for (int i = 0; i < itemsToUpdate.Count; i++)
+        {
+            itemsToUpdate[i].Index = i;
+        }
+
+        await context.SaveChangesAsync();
+    }
+
+    public async Task<List<InformationGroupReturnDto>> GetAllInformationGroups()
+    {
+        return await context.InformationGroups
+            .ProjectTo<InformationGroupReturnDto>(mapper.ConfigurationProvider)
+            .ToListAsync();
+    }
+
+    public async Task<InformationGroupReturnDto?> GetInformationGroupById(int id)
+    {
+        return await context.InformationGroups
+            .Where(x => x.Id == id)
+            .ProjectTo<InformationGroupReturnDto>(mapper.ConfigurationProvider)
+            .FirstOrDefaultAsync();
+    }
+
+    // public int FromIndex { get; set; }
+    // public int ToIndex { get; set; }
+    // public int? TargetGroupId { get; set; } // group to move the item to
+    // public int? CurrentGroupId { get; set; }
+    public async Task<bool> Move(MoveDto moveDto)
+    {
+        var moveType = await context.InformationTypes
+            .FirstOrDefaultAsync(x =>
+                x.Index == moveDto.FromIndex
+                || (x.Group == null && moveDto.CurrentGroupId == null)
+                || (x.Group != null && x.Group.Id == moveDto.CurrentGroupId));
+
+
+        var moveGroup = await context.InformationGroups
+            .FirstOrDefaultAsync(x => x.Index == moveDto.FromIndex);
+
+
+        if (moveGroup == null && moveType == null)
+        {
+            return false;
+        }
+
+        var currentScope = new List<InformationItem>();
+        var targetScope = new List<InformationItem>();
+
+        // InformationType
+        if (moveType != null)
+        {
+            currentScope.AddRange(await context.InformationTypes
+                .Where(x =>
+                    (x.Group == null && moveDto.CurrentGroupId == null)
+                    || (x.Group != null && x.Group.Id == moveDto.CurrentGroupId))
+                .ToListAsync());
+            
+            currentScope.AddRange(await context.InformationGroups.ToListAsync());
+            currentScope.Remove(moveType);
+
+            if (moveDto.TargetGroupId != moveDto.CurrentGroupId)
+            {
+                targetScope.AddRange(await context.InformationTypes
+                    .Where(x => x.Group != null && x.Group.Id == moveDto.TargetGroupId)
+                    .ToListAsync());
+            }
+            else
+            {
+                InformationItem[] currentItems = [];
+                currentScope.CopyTo(currentItems);
+                targetScope.AddRange(currentItems);
+            }
+            
+            targetScope = targetScope.OrderBy(x => x.Index).ToList();
+            currentScope = currentScope.OrderBy(x => x.Index).ToList();
+            targetScope.Insert(moveDto.ToIndex, moveType);
+            
+            
+            for (int i = 0; i < targetScope.Count; i++)
+            {
+                targetScope[i].Index = i;
+            }
+            
+            for (int i = 0; i < currentScope.Count; i++)
+            {
+                currentScope[i].Index = i;
+            }
+
+            return true;
+        }
+
+        if (moveDto.TargetGroupId != null || moveDto.CurrentGroupId != null)
+        {
+            return false;
+        }
+        
+        // InformatinoGroup
+        
     }
 }

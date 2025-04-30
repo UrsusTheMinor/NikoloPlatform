@@ -2,6 +2,7 @@ using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nikolo.Data.DTOs.InformationForm;
+using Nikolo.Data.DTOs.InformationForm.Type;
 using Nikolo.Data.Models;
 using Nikolo.Logic.Contracts;
 
@@ -45,19 +46,19 @@ public class InformationTypeController(IMapper mapper, IFormService formService)
         return NoContent();
     }
 
-    [HttpPut("move")]
-    [Authorize("form:edit")]
-    public async Task<IActionResult> MoveInformationType([FromBody] InformationTypeMoveDto moveDto)
-    {
-        var result = await formService.InformationTypeMove(moveDto);
-
-        if (!result)
-        {
-            return BadRequest();
-        }
-
-        return Ok("InformationType successfully moved");
-    }
+    // [HttpPut("move")]
+    // [Authorize("form:edit")]
+    // public async Task<IActionResult> MoveInformationType([FromBody] MoveDto moveDto)
+    // {
+    //     var result = await formService.InformationTypeMove(moveDto);
+    //
+    //     if (!result)
+    //     {
+    //         return BadRequest();
+    //     }
+    //
+    //     return Ok("InformationType successfully moved");
+    // }
 
     [HttpGet]
     [Authorize("form:edit")]

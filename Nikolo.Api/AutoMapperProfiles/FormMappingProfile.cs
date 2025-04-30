@@ -1,6 +1,9 @@
 using AutoMapper;
 using Nikolo.Data.DTOs.InformationForm;
+using Nikolo.Data.DTOs.InformationForm.Group;
+using Nikolo.Data.DTOs.InformationForm.Type;
 using Nikolo.Data.Models;
+using Nikolo.Data.Models.Form;
 
 namespace Nikolo.Api.AutoMapperProfiles;
 

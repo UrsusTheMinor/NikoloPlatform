@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Nikolo.Data.DTOs.InformationForm;
+using Nikolo.Data.DTOs.InformationForm.Group;
 using Nikolo.Logic.Contracts;
 
 namespace Nikolo.Api.Controllers;
