@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Nikolo.Logic")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d7a772e49bd1c8df11c847d1c3253db6b8c64b5c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e23eca19a636f0a378dbbeed18d9456aa3230703")]
 [assembly: System.Reflection.AssemblyProductAttribute("Nikolo.Logic")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Nikolo.Logic")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

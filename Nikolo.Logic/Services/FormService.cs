@@ -281,7 +281,7 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
                     (x.Group == null && moveDto.CurrentGroupId == null)
                     || (x.Group != null && x.Group.Id == moveDto.CurrentGroupId))
                 .ToListAsync());
-            
+
             currentScope.AddRange(await context.InformationGroups.ToListAsync());
             currentScope.Remove(moveType);
 
@@ -297,31 +297,60 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
                 currentScope.CopyTo(currentItems);
                 targetScope.AddRange(currentItems);
             }
-            
+
             targetScope = targetScope.OrderBy(x => x.Index).ToList();
             currentScope = currentScope.OrderBy(x => x.Index).ToList();
             targetScope.Insert(moveDto.ToIndex, moveType);
-            
-            
+
+
             for (int i = 0; i < targetScope.Count; i++)
             {
                 targetScope[i].Index = i;
             }
-            
-            for (int i = 0; i < currentScope.Count; i++)
+
+            if (moveDto.TargetGroupId != moveDto.CurrentGroupId)
             {
-                currentScope[i].Index = i;
+                for (int i = 0; i < currentScope.Count; i++)
+                {
+                    currentScope[i].Index = i;
+                }
             }
 
+            await context.SaveChangesAsync();
             return true;
         }
+        
 
         if (moveDto.TargetGroupId != null || moveDto.CurrentGroupId != null)
         {
             return false;
         }
+
+        if (moveGroup == null)
+        {
+            return false;
+        }
         
+        currentScope.AddRange(await context.InformationTypes
+            .Where(x => x.Group == null)
+            .ToListAsync());
+        currentScope.AddRange(await context.InformationGroups.ToListAsync());
+        currentScope.Remove(moveGroup);
+        
+        currentScope = currentScope.OrderBy(x => x.Index).ToList();
+        currentScope.Insert(moveDto.ToIndex, moveGroup);
+        
+        for (int i = 0; i < currentScope.Count; i++)
+        {
+            currentScope[i].Index = i;
+        }
         // InformatinoGroup
+        await context.SaveChangesAsync();
+        return true;
+    }
+
+    private async Task<bool> MoveInformationTypes()
+    {
         
     }
 }
