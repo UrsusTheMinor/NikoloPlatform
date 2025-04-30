@@ -254,103 +254,97 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
     // public int? CurrentGroupId { get; set; }
     public async Task<bool> Move(MoveDto moveDto)
     {
-        var moveType = await context.InformationTypes
-            .FirstOrDefaultAsync(x =>
-                x.Index == moveDto.FromIndex
-                || (x.Group == null && moveDto.CurrentGroupId == null)
-                || (x.Group != null && x.Group.Id == moveDto.CurrentGroupId));
+        var moveType = await FindMoveType(moveDto);
+        var moveGroup = await context.InformationGroups.FirstOrDefaultAsync(x => x.Index == moveDto.FromIndex);
 
-
-        var moveGroup = await context.InformationGroups
-            .FirstOrDefaultAsync(x => x.Index == moveDto.FromIndex);
-
-
-        if (moveGroup == null && moveType == null)
+        if (moveType == null && moveGroup == null)
         {
             return false;
         }
 
-        var currentScope = new List<InformationItem>();
-        var targetScope = new List<InformationItem>();
-
-        // InformationType
         if (moveType != null)
         {
-            currentScope.AddRange(await context.InformationTypes
-                .Where(x =>
-                    (x.Group == null && moveDto.CurrentGroupId == null)
-                    || (x.Group != null && x.Group.Id == moveDto.CurrentGroupId))
-                .ToListAsync());
-
-            currentScope.AddRange(await context.InformationGroups.ToListAsync());
-            currentScope.Remove(moveType);
-
-            if (moveDto.TargetGroupId != moveDto.CurrentGroupId)
-            {
-                targetScope.AddRange(await context.InformationTypes
-                    .Where(x => x.Group != null && x.Group.Id == moveDto.TargetGroupId)
-                    .ToListAsync());
-            }
-            else
-            {
-                InformationItem[] currentItems = [];
-                currentScope.CopyTo(currentItems);
-                targetScope.AddRange(currentItems);
-            }
-
-            targetScope = targetScope.OrderBy(x => x.Index).ToList();
-            currentScope = currentScope.OrderBy(x => x.Index).ToList();
-            targetScope.Insert(moveDto.ToIndex, moveType);
-
-
-            for (int i = 0; i < targetScope.Count; i++)
-            {
-                targetScope[i].Index = i;
-            }
-
-            if (moveDto.TargetGroupId != moveDto.CurrentGroupId)
-            {
-                for (int i = 0; i < currentScope.Count; i++)
-                {
-                    currentScope[i].Index = i;
-                }
-            }
-
-            await context.SaveChangesAsync();
-            return true;
+            return await MoveTypeAsync(moveDto, moveType);
         }
-        
 
-        if (moveDto.TargetGroupId != null || moveDto.CurrentGroupId != null)
+        if (moveDto.CurrentGroupId != null || moveDto.TargetGroupId != null)
         {
             return false;
         }
 
-        if (moveGroup == null)
-        {
-            return false;
-        }
-        
-        currentScope.AddRange(await context.InformationTypes
-            .Where(x => x.Group == null)
+        return await MoveGroupAsync(moveDto, moveGroup);
+    }
+
+    private async Task<InformationType?> FindMoveType(MoveDto moveDto)
+    {
+        return await context.InformationTypes.FirstOrDefaultAsync(x =>
+            x.Index == moveDto.FromIndex ||
+            (x.Group == null && moveDto.CurrentGroupId == null) ||
+            (x.Group != null && x.Group.Id == moveDto.CurrentGroupId));
+    }
+
+    private async Task<bool> MoveTypeAsync(MoveDto moveDto, InformationType moveType)
+    {
+        var currentScope = await GetTypeScopeAsync(moveDto.CurrentGroupId);
+        var targetScope = moveDto.TargetGroupId != moveDto.CurrentGroupId
+            ? await GetTypeScopeAsync(moveDto.TargetGroupId)
+            : new List<InformationItem>(currentScope); // clone for same-group move
+
+        currentScope.Remove(moveType);
+
+        ReorderScopes(currentScope, targetScope, moveType, moveDto.ToIndex,
+            moveDto.CurrentGroupId != moveDto.TargetGroupId);
+        await context.SaveChangesAsync();
+
+        return true;
+    }
+
+    private async Task<List<InformationItem>> GetTypeScopeAsync(int? groupId)
+    {
+        var scope = new List<InformationItem>();
+
+        scope.AddRange(await context.InformationTypes
+            .Where(x => (x.Group == null && groupId == null) || (x.Group != null && x.Group.Id == groupId))
             .ToListAsync());
-        currentScope.AddRange(await context.InformationGroups.ToListAsync());
-        currentScope.Remove(moveGroup);
-        
-        currentScope = currentScope.OrderBy(x => x.Index).ToList();
-        currentScope.Insert(moveDto.ToIndex, moveGroup);
-        
-        for (int i = 0; i < currentScope.Count; i++)
+
+        scope.AddRange(await context.InformationGroups.ToListAsync());
+
+        return scope.OrderBy(x => x.Index).ToList();
+    }
+
+    private void ReorderScopes(List<InformationItem> currentScope, List<InformationItem> targetScope,
+        InformationItem item, int insertIndex, bool updateCurrentScope)
+    {
+        targetScope.Insert(insertIndex, item);
+
+        for (int i = 0; i < targetScope.Count; i++)
+            targetScope[i].Index = i;
+
+        if (updateCurrentScope)
         {
-            currentScope[i].Index = i;
+            for (int i = 0; i < currentScope.Count; i++)
+                currentScope[i].Index = i;
         }
-        // InformatinoGroup
+    }
+
+    private async Task<bool> MoveGroupAsync(MoveDto moveDto, InformationGroup moveGroup)
+    {
+        var currentScope = await GetUngroupedScopeAsync();
+        currentScope.Remove(moveGroup);
+        currentScope.Insert(moveDto.ToIndex, moveGroup);
+
+        for (int i = 0; i < currentScope.Count; i++)
+            currentScope[i].Index = i;
+
         await context.SaveChangesAsync();
         return true;
     }
 
-    private async Task<bool> MoveInformationTypes()
+    private async Task<List<InformationItem>> GetUngroupedScopeAsync()
     {
-        
+        var scope = new List<InformationItem>();
+        scope.AddRange(await context.InformationTypes.Where(x => x.Group == null).ToListAsync());
+        scope.AddRange(await context.InformationGroups.ToListAsync());
+        return scope.OrderBy(x => x.Index).ToList();
     }
 }
