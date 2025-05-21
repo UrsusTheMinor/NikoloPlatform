@@ -12,7 +12,9 @@ public class FormMappingProfile : Profile
     public FormMappingProfile()
     {
         CreateMap<InformationTypeCreateDto, InformationType>()
-            .ForMember(dest => dest.Group, opt => opt.Ignore());
+            .ForMember(dest => dest.Group, opt => opt.Ignore())
+            .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.TypeName));
+
         CreateMap<InformationGroupCreateDto, InformationGroup>();
         CreateMap<InformationType, InformationTypeReturnDto>();
     }

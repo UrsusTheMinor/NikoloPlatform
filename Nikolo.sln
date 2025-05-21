@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nikolo.Api", "Nikolo.Api\Ni
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nikolo.Logic", "Nikolo.Logic\Nikolo.Logic.csproj", "{CA1DE207-524A-4C7E-8A08-F811B7524BB5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Nikolo.Test", "Nikolo.Test\Nikolo.Test.csproj", "{945EB18F-0255-42BF-944A-02676CD18DAA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,5 +27,9 @@ Global
 		{CA1DE207-524A-4C7E-8A08-F811B7524BB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CA1DE207-524A-4C7E-8A08-F811B7524BB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CA1DE207-524A-4C7E-8A08-F811B7524BB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{945EB18F-0255-42BF-944A-02676CD18DAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{945EB18F-0255-42BF-944A-02676CD18DAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{945EB18F-0255-42BF-944A-02676CD18DAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{945EB18F-0255-42BF-944A-02676CD18DAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

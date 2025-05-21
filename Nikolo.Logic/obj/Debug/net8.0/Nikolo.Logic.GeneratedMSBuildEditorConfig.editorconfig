@@ -11,5 +11,3 @@ build_property.RootNamespace = Nikolo.Logic
 build_property.ProjectDir = /home/reini/projects/Nikolo/Nikolo.Logic/
 build_property.EnableComHosting = 
 build_property.EnableGeneratedComInterfaceComImportInterop = 
-build_property.EffectiveAnalysisLevelStyle = 8.0
-build_property.EnableCodeStyleSeverity = 

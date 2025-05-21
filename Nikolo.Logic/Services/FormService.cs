@@ -12,7 +12,7 @@ using Nikolo.Logic.Contracts;
 
 namespace Nikolo.Logic.Services;
 
-public class FormService(ApplicationDbContext context, ILogger<UserService> logger, IMapper mapper) : IFormService
+public class FormService(ApplicationDbContext context, ILogger<FormService> logger, IMapper mapper) : IFormService
 {
     private readonly IMapper mapper = mapper;
 
@@ -39,10 +39,28 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
             var groups = await context.InformationGroups.ToListAsync();
             itemsToUpdate.AddRange(groups);
         }
-
+        
+        itemsToUpdate = itemsToUpdate.OrderBy(x => x.Index).ToList();
         context.InformationTypes.Add(infoType);
-        itemsToUpdate.Insert(createDto.Index, infoType);
+        
+        var index = createDto.Index;
 
+        if (index < 0)
+        {
+            index = 0;
+            itemsToUpdate.Insert(index, infoType);
+
+        }
+        else if (index > itemsToUpdate.Count)
+        {
+            itemsToUpdate.Add(infoType);
+        }
+        else
+        {
+            itemsToUpdate.Insert(index, infoType);
+        }
+        
+        
         for (int i = 0; i < itemsToUpdate.Count; i++)
         {
             itemsToUpdate[i].Index = i;
@@ -161,6 +179,8 @@ public class FormService(ApplicationDbContext context, ILogger<UserService> logg
 
 
         context.InformationGroups.Add(infoGroup);
+        
+        itemsToUpdate = itemsToUpdate.OrderBy(x => x.Index).ToList();
         itemsToUpdate.Insert(createDto.Index, infoGroup);
 
         for (int i = 0; i < itemsToUpdate.Count; i++)
