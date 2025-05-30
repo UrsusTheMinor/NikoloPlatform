@@ -1,3 +1,4 @@
+using System.Reflection;
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -218,7 +219,7 @@ public class FormTests
         };
         
         // Act
-        await formService.SaveInformationGroup(group); // Assume this method exists and saves to context
+        await formService.SaveInformationGroup(group);
         await formService.SaveInformationGroup(group2);
         await formService.SaveInformationGroup(group3);
         
@@ -238,5 +239,134 @@ public class FormTests
         Assert.Equal(1, savedGroup2.Index);
         Assert.Equal(2, savedGroup1.Index);
     }
+
+    [Fact]
+    public async Task InformationGroup_InformationType_Combination_Index_Test_Main_List()
+    {
+        // Arange
+        var context = GetInMemoryDbContext("InformationGroup_InformationType_Combination_Index_Test_Main_List_DB");
+        var logger = GetMockLogger();
+        var mapper = GetMockMapper();
+        var formService = new FormService(context, logger, mapper);
+
+        var type1 = new InformationTypeCreateDto()
+        {
+            TypeName = "Type 1",
+            Index = 0
+        };
+
+        var group = new InformationGroupCreateDto()
+        {
+            Name = "Group 1",
+            Index = 0
+        };
+
+        var type2 = new InformationTypeCreateDto()
+        {
+            TypeName = "Type 2",
+            Index = 0
+        };
+
+        var group2 = new InformationGroupCreateDto()
+        {
+            Name = "Group 2",
+            Index = 0
+        };
+        
+        // Act
+        await formService.SaveInformationType(type1);
+        await formService.SaveInformationGroup(group);
+        await formService.SaveInformationType(type2);
+        await formService.SaveInformationGroup(group2);
+        
+        var savedType1 = await context.InformationTypes.FirstOrDefaultAsync(t => t.Name == type1.TypeName);
+        var savedGroup1 = await context.InformationGroups.FirstOrDefaultAsync(g => g.Name == group.Name);
+        var savedType2 = await context.InformationTypes.FirstOrDefaultAsync(t => t.Name == type2.TypeName);
+        var savedGroup2 = await context.InformationGroups.FirstOrDefaultAsync(g => g.Name == group2.Name);
+        
+        Assert.NotNull(savedType1);
+        Assert.NotNull(savedGroup1);
+        Assert.NotNull(savedType2);
+        Assert.NotNull(savedGroup2);
+        
+        Assert.Equal(3, savedType1.Index);
+        Assert.Equal(2, savedGroup1.Index);
+        Assert.Equal(1, savedType2.Index);
+        Assert.Equal(0, savedGroup2.Index);
+        
+    }
+    
+    //Add InformationType to Group and to Main List Test if the differentiation works
+
+    [Fact]
+    public async Task InformationType_To_InformationGroup_And_Main_List_Differentiation_Test()
+    {
+        
+        // Arange
+        var context = GetInMemoryDbContext(MethodBase.GetCurrentMethod().Name + "DB");
+        var logger = GetMockLogger();
+        var mapper = GetMockMapper();
+        var formService = new FormService(context, logger, mapper);
+        
+        // Here is Arange and Act a little mixed
+
+        var group = new InformationGroupCreateDto()
+        {
+            Name = "Group 1",
+            Index = 0
+        };
+
+        var groupObject = await formService.SaveInformationGroup(group);
+
+        var typeInGroup1 = new InformationTypeCreateDto()
+        {
+            TypeName = "Type 1 (Group)",
+            Index = 0,
+            GroupId = groupObject.Id
+        };
+
+        var typeInGroup2 = new InformationTypeCreateDto()
+        {
+            TypeName = "Type 2 (Group)",
+            Index = 0,
+            GroupId = groupObject.Id
+        };
+
+        var typeMain = new InformationTypeCreateDto()
+        {
+            TypeName = "Type 1 (Main)",
+            Index = 0
+        };
+
+        await formService.SaveInformationType(typeInGroup1);
+        await formService.SaveInformationType(typeInGroup2);
+        await formService.SaveInformationType(typeMain);
+        
+        // Assert 
+        
+        var savedGroup = await context.InformationGroups.FirstOrDefaultAsync(g => g.Name == group.Name);
+        var savedTypeInGroup1 = await context.InformationTypes.FirstOrDefaultAsync(t => t.Name == typeInGroup1.TypeName);
+        var savedTypeInGroup2 = await context.InformationTypes.FirstOrDefaultAsync(t => t.Name == typeInGroup2.TypeName);
+        var savedTypeMain = await context.InformationTypes.FirstOrDefaultAsync(t => t.Name == typeMain.TypeName);
+        
+        // Main List
+        Assert.Equal(1, savedGroup.Index);
+        Assert.Equal(0, savedTypeMain.Index);
+        
+        // In Group
+        Assert.Equal(1, savedTypeInGroup1.Index);
+        Assert.Equal(0, savedTypeInGroup2.Index);
+
+    }
+    
+    // Move Method in : Main List, Group, Main List + Group
+    
+    // Edit Test Types, Groups
+    
+    // Delete Test, Types, Groups
+    
+    
+    
+    
     
 }

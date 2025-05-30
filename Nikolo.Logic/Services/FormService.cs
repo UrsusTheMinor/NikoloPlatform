@@ -40,6 +40,7 @@ public class FormService(ApplicationDbContext context, ILogger<FormService> logg
             itemsToUpdate.AddRange(groups);
         }
         
+        
         itemsToUpdate = itemsToUpdate.OrderBy(x => x.Index).ToList();
         context.InformationTypes.Add(infoType);
         
@@ -181,7 +182,22 @@ public class FormService(ApplicationDbContext context, ILogger<FormService> logg
         context.InformationGroups.Add(infoGroup);
         
         itemsToUpdate = itemsToUpdate.OrderBy(x => x.Index).ToList();
-        itemsToUpdate.Insert(createDto.Index, infoGroup);
+
+        var index = createDto.Index;
+        if (index < 0)
+        {
+            index = 0;
+            itemsToUpdate.Insert(index, infoGroup);
+
+        }
+        else if (index > itemsToUpdate.Count)
+        {
+            itemsToUpdate.Add(infoGroup);
+        }
+        else
+        {
+            itemsToUpdate.Insert(index, infoGroup);
+        }
 
         for (int i = 0; i < itemsToUpdate.Count; i++)
         {
